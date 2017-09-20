@@ -117,7 +117,11 @@ static int __init second_init(void)
 	
 	second_devp->dev = device_create(second_class,  NULL,  
 		MKDEV(SECOND_MAJOR, 0), second_devp, "second");
-		
+//  second_devp->dev = device_create(second_class,  NULL,  
+//      MKDEV(SECOND_MAJOR, 0), second_devp, "second");
+	second_devp->dev =  device_create_with_groups(second_class,  NULL,
+             MKDEV(SECOND_MAJOR, 0), second_devp, NULL,"second");
+	
 	printk(KERN_INFO "second_dev drv proded\n");
 	return 0;	
 }
