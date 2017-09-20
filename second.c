@@ -1,3 +1,4 @@
+
 #include <linux/module.h>
 #include <linux/fs.h>
 #include <linux/mm.h>
@@ -5,6 +6,8 @@
 #include <linux/cdev.h>
 #include <linux/slab.h>
 #include <linux/uaccess.h>
+#include <linux/fs.h>       /* struct file_operations, struct file */
+#include <linux/miscdevice.h>  
 
 #define SECOND_MAJOR 248
 
@@ -15,6 +18,7 @@ struct second_dev {
 	struct cdev cdev;
 	atomic_t counter;
 	struct timer_list s_timer;
+
 };
 
 static struct second_dev *second_devp;
@@ -29,6 +33,7 @@ static void second_timer_handler(unsigned long arg)
 
 static int second_open(struct inode *inode, struct file *filp)
 {
+	printk(KERN_INFO "0-%s\n", __func__);
 	init_timer(&second_devp->s_timer);
 	second_devp->s_timer.function = &second_timer_handler;
 	second_devp->s_timer.expires = jiffies + HZ;
@@ -36,7 +41,7 @@ static int second_open(struct inode *inode, struct file *filp)
 	add_timer(&second_devp->s_timer);
 
 	atomic_set(&second_devp->counter, 0);  /* 初始化秒计数为0 */                   
-
+	printk(KERN_INFO "1-%s\n", __func__);
 	return 0;
 }
 
@@ -76,11 +81,17 @@ static void second_setup_cdev(struct second_dev *dev, int index)
 	if (err)
 		printk(KERN_ERR "Failed to add second device\n");
 }
+static struct miscdevice second_misc_device = {
+    .minor = MISC_DYNAMIC_MINOR,
+    .name = "second",
+    .fops = &second_fops
+};
 
 static int __init second_init(void)
 {
+
 	int ret;
-	dev_t devno = MKDEV(second_major, 0);
+	/*	dev_t devno = MKDEV(second_major, 0);
 
 	if (second_major)
 		ret = register_chrdev_region(devno, 1, "second");
@@ -104,17 +115,29 @@ static int __init second_init(void)
 fail_malloc:
 	unregister_chrdev_region(devno, 1);
 	return ret;
+	*/
+	printk(KERN_INFO "second init\n");
+	second_devp = kzalloc(sizeof(*second_devp), GFP_KERNEL);
+	if (!second_devp) {
+		ret = -ENOMEM;
+		return ret;
+	}
+	misc_register(&second_misc_device);
+
+	printk(KERN_INFO "second_dev drv proded\n");
+	return 0;	
 }
 module_init(second_init);
 
 static void __exit second_exit(void)
 {
-	cdev_del(&second_devp->cdev);	
-	kfree(second_devp);	
-	unregister_chrdev_region(MKDEV(second_major, 0), 1);
+//	cdev_del(&second_devp->cdev);	
+//	kfree(second_devp);	
+//	unregister_chrdev_region(MKDEV(second_major, 0), 1);
+	misc_deregister(&second_misc_device);
+
 }
 module_exit(second_exit);
 
 MODULE_AUTHOR("Barry Song <21cnbao@gmail.com>");
 MODULE_LICENSE("GPL v2"); 
-
