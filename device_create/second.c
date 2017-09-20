@@ -101,7 +101,8 @@ static int __init second_init(void)
 		ret = -ENOMEM;
 		return ret;
 	}
-	cdev_init(&second_devp->cdev, &second_fops);
+	
+    cdev_init(&second_devp->cdev, &second_fops);
     second_devp->cdev.owner = THIS_MODULE;
     err = cdev_add(&second_devp->cdev, devno, 1);
     if(err)
@@ -117,8 +118,6 @@ static int __init second_init(void)
 	second_devp->dev = device_create(second_class,  NULL,  
 		MKDEV(SECOND_MAJOR, 0), second_devp, "second");
 		
-//	misc_register(&second_misc_device);
-
 	printk(KERN_INFO "second_dev drv proded\n");
 	return 0;	
 }
@@ -129,7 +128,7 @@ static void __exit second_exit(void)
     if(second_devp)
     {
         cdev_del(&second_devp->cdev);     
-	}
+    }
 	
 	device_destroy(second_class, MKDEV(SECOND_MAJOR, 0));
 	class_destroy(second_class);
