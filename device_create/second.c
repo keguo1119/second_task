@@ -139,6 +139,7 @@ unlock:
 #endif
 	printk(KERN_INFO "%s: 4  - mutex lock, count = %ld\n", __func__, count);
 	return status ? : count;
+////// 此处的返回值一定注意不要为0， 驱动程序会不停的从文件中读取数据
 }
 
 ssize_t trigger_show(struct device *dev, struct device_attribute *attr,
